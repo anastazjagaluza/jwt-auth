@@ -4,6 +4,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 const Pool = require("pg").Pool;
+const cors = require("cors");
+
+router.use(cors());
 
 router.use(express.json());
 const pool = new Pool({
@@ -17,6 +20,7 @@ const pool = new Pool({
 router.post("/login", (req, response) => {
     const user = { email: req.body.email, password: req.body.password };
     pool.query('SELECT * FROM users WHERE email = $1', [req.body.email], async (req, res) => {
+     if (res.rows.length == 0) { response.status(401).send("No such user"); return; }
         try {
             await bcrypt.compare(res.rows[0].password, user.password);
             const accessToken = generateAccessToken(user);
@@ -25,13 +29,13 @@ router.post("/login", (req, response) => {
                 return response.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
             })
         } catch {
-            return response.send("Wrong email or password");
+            return response.status(404).send("Wrong email or password");
         }
     })
 });
 
 function generateAccessToken(user) {
-   return jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '20m'});
+   return jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: '15m'});
 }
 
 function generateRefreshToken(user) {
@@ -44,9 +48,9 @@ router.post("/token", (req, response) => {
     pool.query('SELECT EXISTS(SELECT 1 FROM tokens where token = $1)', [req.body.token], (req, res) => {
         if (!res) return response.status(404).send("The token has expired or doesn't exist");
         jwt.verify(refreshToken, process.env.REFRESH_TOKEN, (err, user) => {
-            if (err) return response.send("No access");
+            if (err) return response.status(404).send("No access");
             const accessToken = generateAccessToken(user);
-            return response.json({ accessToken: accessToken });
+            return response.status(200).json({ accessToken: accessToken });
         })
     })
 });
