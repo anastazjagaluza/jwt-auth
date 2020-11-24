@@ -1,32 +1,32 @@
 import { React, useState } from 'react';
+import { useHistory } from 'react-router-dom';
 
 export default function Auth({ onAuth }) {
     const [loginData, setLoginData] = useState({email: "", password: ""});
     const [signUpData, setSignUpData] = useState({ username: "", email: "", password: ""});
-
+    const history = useHistory();
     async function login(e) {
-        e.preventDefault()
-        console.log(loginData)
+        e.preventDefault();
         const resp = await fetch("http://localhost:8080/login", { method: "POST", mode: "cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(loginData) });
         switch (resp.status) {
             case 401:
                 console.log("no such user")
                 break;
-            case 404:
-                console.log("wrong password");
-                break;
-            case 200:
-                console.log("yay");
-                const res = await resp.json();
-                localStorage.setItem("accessToken", res.accessToken);
-                localStorage.setItem("refreshToken", res.refreshToken);
-                onAuth();
+                case 404:
+                    console.log("wrong password");
+                    break;
+                    case 200:
+                        const res = await resp.json();
+                        localStorage.setItem("accessToken", res.accessToken);
+                        localStorage.setItem("refreshToken", res.refreshToken);
+                        onAuth();
+                        history.push("/dashboard");
         }
     }
-
+                
     function assignLoginData(e) {
-        const name = e.target?.name;
-        switch(name) {
+       const name = e.target?.name;
+       switch(name) {
             case "email":
                 setLoginData({ ...loginData, "email": e.target.value.trim() });
                 break;
@@ -35,7 +35,7 @@ export default function Auth({ onAuth }) {
                 break;
         }
     }
-    
+                
     function assignSignUpData(e) {
         const name = e.target?.name;
         switch(name) {
@@ -50,6 +50,25 @@ export default function Auth({ onAuth }) {
         }
     }
 
+    async function signUp(e) {
+        e.preventDefault();
+        const resp = await fetch("http://localhost:8080/signup", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json" }, body: JSON.stringify(signUpData) })
+        if (resp.status != 200) {
+          console.log(resp); 
+        }
+        else {
+            const res = await resp.json();
+            console.log(res);
+            localStorage.setItem("accessToken", res.accessToken);
+            localStorage.setItem("refreshToken", res.refreshToken);
+            onAuth();
+            history.push("/dashboard");
+        }
+    }
+                
+                            
     const formDisplayStyle = { display: "flex", flexDirection: "column", flexGrow: "1", padding: "6vw", alignItems: "center"};
     return (
         <div style={{
@@ -64,7 +83,7 @@ export default function Auth({ onAuth }) {
                 <button type="submit">Log in</button>
             </form>
             
-            <form style={formDisplayStyle}>
+            <form style={formDisplayStyle} onSubmit={(e) => signUp(e)}>
             <h1>...if you don't have an account...</h1>
                 <input type="text" name="username" onInput={(e) => assignSignUpData(e)} required placeholder="User Name"></input>
                 <input type="email" name="email" onInput={(e) => assignSignUpData(e)} required placeholder="Email"></input>

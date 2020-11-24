@@ -64,11 +64,13 @@ router.post("/signup", (req, response) => {
             pool.query('INSERT INTO users (email, name, password) VALUES ($1, $2, $3)', [user.email, user.name, hashedPassword], (request, resp) => {
                 const accessToken = generateAccessToken(user);
                 const refreshToken = generateRefreshToken(user);
-                return response.json({ accessToken: accessToken, refreshToken: refreshToken });
+                return response.status(200).json({ accessToken: accessToken, refreshToken: refreshToken });
             })
         } catch {
-                return response.send("Something went wrong");
+                return response.status(500).send("Something went wrong");
             }
+        } else {
+            return response.status(400).send("There already is a user like that");
         }
     })
 });

@@ -1,4 +1,4 @@
-async function authorize() {
+export default async function authorized() {
   const token = localStorage.getItem("refreshToken");
   if (token != null) {
     let resp = await fetch("http://localhost:8080/token", {
@@ -12,13 +12,13 @@ async function authorize() {
     if (resp.status === 200) {
       resp = await resp.json(); 
       localStorage.setItem("accessToken", resp.accessToken)
-      authorized = true;
+      return true;
       }
     else {
-      return;
+      return false;
     }
   }
   else {
-    return;
+    return false;
   }
 };

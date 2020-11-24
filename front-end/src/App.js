@@ -1,32 +1,58 @@
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import {
   BrowserRouter as Router,
   Switch,
   Route,
   Link,
+  Redirect,
+  useHistory,
 } from "react-router-dom";
 import Auth from "./pages/Auth";
-import PrivatePath from "./components/PrivatePath";
+import Authorized from "./components/Authorized";
 import Dashboard from "./pages/Dashboard";
+import logout from './components/Logout';
 
 function App() {
-  return (
+  const [hasAccess, updateHasAccess] = useState(false);
+
+  useEffect(()=> {
+    const authorize = async () => {
+    const response = await Authorized();
+    updateHasAccess(response);
+    }
+    authorize(); 
+   })
+
+   async function noAccess(e) {
+     e.preventDefault();
+     const loggedOut = await logout();
+    
+    if (loggedOut === true) updateHasAccess(false);
+   }
+   
+   return (
     <div className="App">
     <Router>
     <nav id="nav">
       <ul><Link to="/">Home</Link></ul>
-      <ul><Link to="/auth">Login or Signup</Link></ul>
+      {hasAccess ? null : <ul><Link to="/auth">Login or Signup</Link></ul>}
       <ul><Link to="/dashboard">Dashboard</Link></ul>
+      {hasAccess 
+        ? <ul><a href="" onClick={(e) => noAccess(e)}>Logout</a></ul>
+        : null}
     </nav>
     <Switch>
      <Route exact path="/">
        <h1>Welcome to my special page!</h1>
      </Route> 
      <Route path="/auth">
-        <Auth />
+        <Auth onAuth={() => updateHasAccess(true)} />
      </Route> 
-     <Route>
-        <PrivatePath path="/dashboard" component={Dashboard} /> 
+     <Route path="/dashboard">
+       {hasAccess 
+       ? <Dashboard />
+       : <Redirect to="/auth" /> }
       </Route> 
     </Switch> 
       </Router>
