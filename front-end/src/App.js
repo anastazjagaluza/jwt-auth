@@ -11,8 +11,7 @@ import {
 import Auth from "./pages/Auth";
 import Authorized from "./components/Authorized";
 import Dashboard from "./pages/Dashboard";
-import logout from './components/Logout';
-
+import LogOut from "./pages/LogOut";
 function App() {
   const [hasAccess, updateHasAccess] = useState(false);
 
@@ -24,11 +23,7 @@ function App() {
     authorize(); 
    })
 
-   async function noAccess(e) {
-     e.preventDefault();
-     const loggedOut = await logout();
-    
-    if (loggedOut === true) updateHasAccess(false);
+   function noAccess(e) {
    }
    
    return (
@@ -39,7 +34,7 @@ function App() {
       {hasAccess ? null : <ul><Link to="/auth">Login or Signup</Link></ul>}
       <ul><Link to="/dashboard">Dashboard</Link></ul>
       {hasAccess 
-        ? <ul><a href="" onClick={(e) => noAccess(e)}>Logout</a></ul>
+        ? <ul><Link to="/logout">Logout</Link></ul>
         : null}
     </nav>
     <Switch>
@@ -54,6 +49,9 @@ function App() {
        ? <Dashboard />
        : <Redirect to="/auth" /> }
       </Route> 
+      <Route path="/logout">
+        <LogOut onLogOut={() => updateHasAccess(false)} />
+      </Route>
     </Switch> 
       </Router>
     </div>
